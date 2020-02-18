@@ -9,7 +9,7 @@ namespace TestApp
         {
             Console.WriteLine("Hello World! - " + args.ToString());
 
-            JobServiceManager.InitStorageKey("baspin", "7CeKKBkxqCE2nwARKVgT8FLZGBj+JvIlukCkn/kGuonY5jSauBrnViZRBZwjdFwM+074ayXiSmdGurwnGIp1jg==", "test");
+            JobServiceManager.InitStorageKey("", "", "");
             //JobServiceManager.CreateTablesIfNotExists();
 
             var testJObName = "Test Job";
