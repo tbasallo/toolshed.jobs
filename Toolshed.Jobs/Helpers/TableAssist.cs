@@ -3,8 +3,8 @@
     public static class TableAssist
     {
         const string JobsTableName = "Jobs";
-        const string JobInstanceTableName = "JobInstance";
-        const string JobInstanceDetailTableName = "JobInstanceDetail";
+        const string JobInstanceTableName = "JobInstances";
+        const string JobInstanceDetailTableName = "JobInstanceDetails";
 
         public static string Jobs()
         {
