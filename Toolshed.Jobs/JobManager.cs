@@ -25,14 +25,14 @@ namespace Toolshed.Jobs
         /// </summary>
         public int MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
 
-        public JobManager(string jobName, Guid jobId)
+        public JobManager(Guid jobId, string version = JobServiceManager.DefaultVersionName)
         {
             Jobs = new JobService();
-            Job = Jobs.GetJob(jobName, jobId);
+            Job = Jobs.GetJob(jobId, version);
 
             if (Job == null)
             {
-                throw new NullReferenceException("Job not found (" + jobName + ")");
+                throw new NullReferenceException("Job not found (" + jobId + ")");
             }
         }
 

@@ -142,9 +142,9 @@ namespace Toolshed.Jobs
         /// </summary>
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
-        public Job GetJob(string jobName)
+        public Job GetJob(Guid jobId)
         {
-            var query = new TableQuery<Job>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobName.ToLowerInvariant()));
+            var query = new TableQuery<Job>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobId.ToString()));
             return JobsTable.ExecuteQuery(query).FirstOrDefault();
         }
 
@@ -153,9 +153,9 @@ namespace Toolshed.Jobs
         /// </summary>
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
-        public Job GetJob(string jobName, Guid id)
+        public Job GetJob(Guid jobId, string version)
         {
-            var retrieveOperation = TableOperation.Retrieve<Job>(jobName.ToLowerInvariant(), id.ToString());
+            var retrieveOperation = TableOperation.Retrieve<Job>(jobId.ToString(), version);
             return JobsTable.Execute(retrieveOperation).Result as Job;
         }
 
@@ -165,9 +165,9 @@ namespace Toolshed.Jobs
         /// </summary>
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
-        public async Task<Job> GetJobAsync(string jobName)
+        public async Task<Job> GetJobAsync(Guid jobId)
         {
-            var query = new TableQuery<Job>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobName.ToLowerInvariant()));
+            var query = new TableQuery<Job>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobId.ToString()));
             var result = await JobsTable.ExecuteQuerySegmentedAsync(query, null);
             return result.FirstOrDefault();
         }
@@ -177,9 +177,9 @@ namespace Toolshed.Jobs
         /// </summary>
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
-        public async Task<Job> GetJobAsync(string jobName, Guid id)
+        public async Task<Job> GetJobAsync(Guid jobId, string version)
         {
-            var retrieveOperation = TableOperation.Retrieve<Job>(jobName.ToLowerInvariant(), id.ToString());
+            var retrieveOperation = TableOperation.Retrieve<Job>(jobId.ToString(), version);
             var result = await JobsTable.ExecuteAsync(retrieveOperation);
             return result.Result as Job;
         }

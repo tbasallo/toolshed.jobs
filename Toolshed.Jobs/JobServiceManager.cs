@@ -6,10 +6,15 @@ namespace Toolshed.Jobs
 {
     public static class JobServiceManager
     {
+        /// <summary>
+        /// The name used as the default version when a version is not provided
+        /// </summary>
+        internal const string DefaultVersionName = "default";
+
         internal static string StorageName { get; private set; }
         internal static string ConnectionKey { get; private set; }
         internal static StorageConnectionType StorageConnectionType { get; private set; }
-        public static string TablePrefix { get; set; }
+        internal static string TablePrefix { get; set; }
 
         public static void InitStorageKey(string storageName, string storageKey, string tablePrefix = null)
         {
