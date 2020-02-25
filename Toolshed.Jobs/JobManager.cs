@@ -7,12 +7,10 @@ namespace Toolshed.Jobs
     public class JobManager
     {
         private JobService Jobs { get; set; }
-        private Stopwatch SW { get; set; }
 
 
         public Job Job { get; private set; }
         public JobInstance Instance { get; private set; }
-        public TimeSpan? Elapsed { get { return SW?.Elapsed; } }
 
         /// <summary>
         /// If set to true, will abort a running instance and continue if the instance has been running longer than MinimumMinutesRunningForInstanceAbortion
@@ -53,10 +51,9 @@ namespace Toolshed.Jobs
             Jobs.Save(detail);
         }
 
-        public async Task<bool> LoadInstance(string instanceId)
+        public async Task<bool> LoadInstance(Guid instanceId)
         {
             Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
-
             return Instance != null;
         }
 
@@ -83,9 +80,6 @@ namespace Toolshed.Jobs
                     throw new JobCurrentlyRunningException(Job.LastInstanceId);
                 }
             }
-
-            SW = new Stopwatch();
-            SW.Start();
 
             Instance = new JobInstance(Job.Id, Guid.NewGuid(), Job.Version);
 
@@ -138,8 +132,7 @@ namespace Toolshed.Jobs
             Instance.LastType = detail.Type;
             Instance.CompletedOn = detail.Date;
 
-            SW.Stop();
-            Instance.RunningTimeInSeconds = Math.Round(SW.Elapsed.TotalSeconds, 2);
+            Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
             Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
 
             return detail;
@@ -180,12 +173,14 @@ namespace Toolshed.Jobs
                 Instance.HasError = true;
                 Instance.LastOn = now;
                 Instance.LastType = JobDetailType.Aborted;
+                Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
 
                 if (Job.LastInstanceId == Instance.InstanceId)
                 {
                     Job.IsRunning = false;
                     Job.LastInstanceStatusOn = now;
                     Job.LastInstanceStatus = JobDetailType.Aborted;
+                    Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
                 }
 
                 detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
@@ -277,6 +272,7 @@ namespace Toolshed.Jobs
             Instance.TotalDetails++;
             Instance.LastOn = detail.Date;
             Instance.LastType = detail.Type;
+            Instance.RunningTimeInSeconds = Math.Round(DateTime.UtcNow.Subtract(Instance.StartedOn).TotalSeconds, 2);
 
             Job.LastInstanceStatus = detail.Type;
             Job.LastInstanceStatusOn = detail.Date;
@@ -284,6 +280,7 @@ namespace Toolshed.Jobs
             Job.HasWarning = Instance.HasWarning;
             Job.HasException = Instance.HasException;
             Job.HasError = Instance.HasError;
+            Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
 
             return detail;
         }

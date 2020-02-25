@@ -23,9 +23,9 @@ namespace Toolshed.Jobs
 
 
 
-        public async Task<JobInstance> GetJobInstanceAsync(Guid jobId, string instanceId)
+        public async Task<JobInstance> GetJobInstanceAsync(Guid jobId, Guid instanceId)
         {
-            var retrieveOperation = TableOperation.Retrieve<JobInstance>(jobId.ToString(), instanceId);
+            var retrieveOperation = TableOperation.Retrieve<JobInstance>(jobId.ToString(), instanceId.ToString());
             var result = await JobInstancesTable.ExecuteAsync(retrieveOperation);
             return result.Result as JobInstance;
         }
@@ -139,7 +139,7 @@ namespace Toolshed.Jobs
         }
 
         //TODO return table result or return boolean?
-        public async Task<bool> DeleteJobInstanceAsync(Guid jobId, string instanceId)
+        public async Task<bool> DeleteJobInstanceAsync(Guid jobId, Guid instanceId)
         {
             var instance = await GetJobInstanceAsync(jobId, instanceId);
             return await DeleteAsync(instance);

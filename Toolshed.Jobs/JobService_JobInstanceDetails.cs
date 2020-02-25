@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
@@ -28,9 +29,9 @@ namespace Toolshed.Jobs
         /// <summary>
         /// Returns all job instance details
         /// </summary>
-        public List<JobInstanceDetail> GetJobInstanceDetails(string instanceId)
+        public List<JobInstanceDetail> GetJobInstanceDetails(Guid instanceId)
         {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId));
+            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
             var results = JobInstanceDetailsTable.ExecuteQuery(query);
 
             return results.ToList();
@@ -40,9 +41,9 @@ namespace Toolshed.Jobs
         /// Returns all job instance details by iterating over each segment returned
         /// </summary>
         /// <returns></returns>
-        public async Task<List<JobInstanceDetail>> GetJobInstanceDetailsAsync(string instanceId)
+        public async Task<List<JobInstanceDetail>> GetJobInstanceDetailsAsync(Guid instanceId)
         {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId));
+            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
             var segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query, null);
 
             var model = new List<JobInstanceDetail>();
@@ -67,9 +68,9 @@ namespace Toolshed.Jobs
         /// <param name="pageSize">How many entities to return with each call</param>
         /// <param name="token">The continuation token from the previous call</param>
         /// <returns></returns>
-        public async Task<PagedTableEntity<JobInstanceDetail>> GetJobInstanceDetailsAsync(string instanceId, int pageSize, TableContinuationToken token = null)
+        public async Task<PagedTableEntity<JobInstanceDetail>> GetJobInstanceDetailsAsync(Guid instanceId, int pageSize, TableContinuationToken token = null)
         {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId));
+            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
             TableQuerySegment<JobInstanceDetail> segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query.Take(pageSize), token);
 
             var model = new PagedTableEntity<JobInstanceDetail>
@@ -126,9 +127,9 @@ namespace Toolshed.Jobs
         /// </summary>
         /// <param name="jobInstanceProviderKey"></param>
         /// <returns>TODO// what should we return???</returns>
-        public async Task DeleteAll(string instanceId)
+        public async Task DeleteAll(Guid instanceId)
         {
-            await JobServiceHelper.DeleteAllEntitiesInBatchesAsync(JobInstanceDetailsTable, instanceId);
+            await JobServiceHelper.DeleteAllEntitiesInBatchesAsync(JobInstanceDetailsTable, instanceId.ToString());
         }
     }
 }
