@@ -277,10 +277,10 @@ namespace Toolshed.Jobs
             Job.LastInstanceStatus = detail.Type;
             Job.LastInstanceStatusOn = detail.Date;
             Job.LastInstanceId = Instance.InstanceId;
+            Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
             Job.HasWarning = Instance.HasWarning;
             Job.HasException = Instance.HasException;
             Job.HasError = Instance.HasError;
-            Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
 
             return detail;
         }
