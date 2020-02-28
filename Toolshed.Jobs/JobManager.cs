@@ -51,12 +51,16 @@ namespace Toolshed.Jobs
             Jobs.Save(detail);
         }
 
-        public async Task<bool> LoadInstance(Guid instanceId)
+        public bool LoadInstance(Guid instanceId)
+        {
+            Instance = Jobs.GetJobInstance(Job.Id, instanceId);
+            return Instance != null;
+        }
+        public async Task<bool> LoadInstanceAsync(Guid instanceId)
         {
             Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
             return Instance != null;
         }
-
 
         public async Task StartJobAsync(string message = "Started")
         {
@@ -86,7 +90,7 @@ namespace Toolshed.Jobs
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
             {
                 Date = DateTime.UtcNow,
-                Type = JobDetailType.Info,
+                Type = JobDetailType.Started,
                 Details = message
             };
 
@@ -97,7 +101,7 @@ namespace Toolshed.Jobs
             Instance.StartedOn = Instance.LastOn;
 
             Job.LastInstanceStatusOn = detail.Date;
-            Job.LastInstanceStatus = "Started";
+            Job.LastInstanceStatus = detail.Type.ToString();
             Job.TotalInstances++;
             Job.LastInstanceId = Instance.InstanceId;
             Job.IsRunning = true;

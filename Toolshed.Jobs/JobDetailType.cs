@@ -8,5 +8,6 @@
         public const string Exception = "Exception";
         public const string Error = "Error";
         public const string Aborted = "Aborted";
+        public const string Started = "Started";
     }
 }

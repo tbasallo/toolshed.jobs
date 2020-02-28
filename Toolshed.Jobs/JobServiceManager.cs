@@ -36,11 +36,11 @@ namespace Toolshed.Jobs
             CloudStorageAccount storageAccount;
             if (StorageConnectionType == StorageConnectionType.Key)
             {
-                storageAccount = new CloudStorageAccount(new StorageCredentials(JobServiceManager.StorageName, JobServiceManager.ConnectionKey), true);
+                storageAccount = new CloudStorageAccount(new StorageCredentials(StorageName, ConnectionKey), true);
             }
             else if (StorageConnectionType == StorageConnectionType.ConnectionString)
             {
-                storageAccount = CloudStorageAccount.Parse(JobServiceManager.ConnectionKey);
+                storageAccount = CloudStorageAccount.Parse(ConnectionKey);
             }
             else
             {

@@ -22,7 +22,12 @@ namespace Toolshed.Jobs
         }
 
 
-
+        public JobInstance GetJobInstance(Guid jobId, Guid instanceId)
+        {
+            var retrieveOperation = TableOperation.Retrieve<JobInstance>(jobId.ToString(), instanceId.ToString());
+            var result = JobInstancesTable.Execute(retrieveOperation);
+            return result.Result as JobInstance;
+        }
         public async Task<JobInstance> GetJobInstanceAsync(Guid jobId, Guid instanceId)
         {
             var retrieveOperation = TableOperation.Retrieve<JobInstance>(jobId.ToString(), instanceId.ToString());
