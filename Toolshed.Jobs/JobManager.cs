@@ -34,10 +34,6 @@ namespace Toolshed.Jobs
             }
         }
 
-
-
-
-
         private async Task SaveAsync(JobInstanceDetail detail)
         {
             Job = await Jobs.SaveAsync(Job);
@@ -51,15 +47,25 @@ namespace Toolshed.Jobs
             Jobs.Save(detail);
         }
 
-        public bool LoadInstance(Guid instanceId)
+
+        public async Task<bool> StartOrLoadJobAsync(Guid instanceId, string message = "Started")
         {
-            Instance = Jobs.GetJobInstance(Job.Id, instanceId);
+            if (!(await LoadInstanceAsync(instanceId)))
+            {
+                await SaveAsync(Start(message, instanceId));
+            }
+
             return Instance != null;
+
         }
-        public async Task<bool> LoadInstanceAsync(Guid instanceId)
+        public void StartOrLoadJob(Guid instanceId, string message = "Started")
         {
-            Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
-            return Instance != null;
+            if (!LoadInstance(instanceId))
+            {
+                Save(Start(message, instanceId));
+            }
+
+            Save(Start(message, instanceId));
         }
 
         public async Task StartJobAsync(string message = "Started")
@@ -70,7 +76,7 @@ namespace Toolshed.Jobs
         {
             Save(Start(message));
         }
-        private JobInstanceDetail Start(string message)
+        private JobInstanceDetail Start(string message, Guid? instanceId = null)
         {
             if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
             {
@@ -85,7 +91,7 @@ namespace Toolshed.Jobs
                 }
             }
 
-            Instance = new JobInstance(Job.Id, Guid.NewGuid(), Job.Version);
+            Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
 
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
             {
@@ -108,6 +114,19 @@ namespace Toolshed.Jobs
 
             return detail;
         }
+
+        public bool LoadInstance(Guid instanceId)
+        {
+            Instance = Jobs.GetJobInstance(Job.Id, instanceId);
+            return Instance != null;
+        }
+        public async Task<bool> LoadInstanceAsync(Guid instanceId)
+        {
+            Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
+            return Instance != null;
+        }
+
+
 
         public async Task CompleteJobAsync(string message = "Completed")
         {
