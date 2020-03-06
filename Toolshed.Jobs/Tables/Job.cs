@@ -37,6 +37,6 @@ namespace Toolshed.Jobs
         public bool IsRunning { get; set; }
         public bool IsEnabled { get; set; }
         public bool IsMultipleRunningInstancesAllowed { get; set; }
-        public double LastInstanceRunningTimeInSeconds { get; internal set; }
+        public double LastInstanceRunningTimeInSeconds { get; set; }
     }
 }
