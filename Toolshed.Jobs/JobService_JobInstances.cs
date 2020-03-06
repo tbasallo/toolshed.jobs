@@ -99,6 +99,28 @@ namespace Toolshed.Jobs
             return (result.Result as JobInstance);
         }
 
+
+        /// <summary>
+        /// Inserts or updates/replaces a specified JobInstanceHistory
+        /// </summary>
+        public void Save(JobInstanceHistory jobInstanceHistory)
+        {
+            var insertOperation = TableOperation.InsertOrReplace(jobInstanceHistory);
+            //TODO research performance and operation impact of insert vs. merge
+            //var mergeOperation = TableOperation.InsertOrMerge(job);
+            JobInstancesTable.Execute(insertOperation);
+        }
+        /// <summary>
+        /// Inserts or updates/replaces a specified JobInstanceHistory
+        /// </summary>
+        public async Task SaveAsync(JobInstanceHistory jobInstanceHistory)
+        {
+            var insertOperation = TableOperation.InsertOrReplace(jobInstanceHistory);
+            //TODO research performance and operation impact of insert vs. merge
+            //var mergeOperation = TableOperation.InsertOrMerge(job);
+            await JobInstancesTable.ExecuteAsync(insertOperation);
+        }
+
         /// <summary>
         /// Inserts or updates/replaces a specified job instance
         /// </summary>

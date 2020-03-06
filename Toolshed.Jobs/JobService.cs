@@ -11,13 +11,13 @@ namespace Toolshed.Jobs
         public JobService()
         {
             CloudStorageAccount storageAccount;
-            if (JobServiceManager.StorageConnectionType == StorageConnectionType.Key)
+            if (ServiceManager.StorageConnectionType == StorageConnectionType.Key)
             {
-                storageAccount = new CloudStorageAccount(new StorageCredentials(JobServiceManager.StorageName, JobServiceManager.ConnectionKey), true);
+                storageAccount = new CloudStorageAccount(new StorageCredentials(ServiceManager.StorageName, ServiceManager.ConnectionKey), true);
             }
-            else if (JobServiceManager.StorageConnectionType == StorageConnectionType.ConnectionString)
+            else if (ServiceManager.StorageConnectionType == StorageConnectionType.ConnectionString)
             {
-                storageAccount = CloudStorageAccount.Parse(JobServiceManager.ConnectionKey);
+                storageAccount = CloudStorageAccount.Parse(ServiceManager.ConnectionKey);
             }
             else
             {

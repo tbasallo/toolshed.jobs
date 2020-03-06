@@ -4,7 +4,7 @@ using Microsoft.Azure.Cosmos.Table;
 
 namespace Toolshed.Jobs
 {
-    public static class JobServiceManager
+    public static class ServiceManager
     {
         /// <summary>
         /// The name used as the default version when a version is not provided
@@ -62,11 +62,11 @@ namespace Toolshed.Jobs
             CloudStorageAccount storageAccount;
             if (StorageConnectionType == StorageConnectionType.Key)
             {
-                storageAccount = new CloudStorageAccount(new StorageCredentials(JobServiceManager.StorageName, JobServiceManager.ConnectionKey), true);
+                storageAccount = new CloudStorageAccount(new StorageCredentials(StorageName, ConnectionKey), true);
             }
             else if (StorageConnectionType == StorageConnectionType.ConnectionString)
             {
-                storageAccount = CloudStorageAccount.Parse(JobServiceManager.ConnectionKey);
+                storageAccount = CloudStorageAccount.Parse(ConnectionKey);
             }
             else
             {

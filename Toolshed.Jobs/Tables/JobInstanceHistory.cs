@@ -8,7 +8,7 @@ namespace Toolshed.Jobs
     /// </summary>
     public class JobInstanceHistory : TableEntity
     {
-        public JobInstanceHistory(DateTimeOffset date, Guid instanceId, Guid jobid)
+        public JobInstanceHistory(DateTime date, Guid instanceId, Guid jobid)
         {
             PartitionKey = date.ToString("yyyyMMdd)");
             RowKey = instanceId.ToString();
@@ -19,6 +19,6 @@ namespace Toolshed.Jobs
 
         public Guid InstanceId { get; set; }
         public Guid JobId { get; set; }
-        public DateTimeOffset Date { get; set; }
+        public DateTime Date { get; set; }
     }
 }

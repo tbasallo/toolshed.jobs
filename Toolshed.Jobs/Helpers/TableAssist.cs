@@ -8,15 +8,15 @@
 
         public static string Jobs()
         {
-            return string.Format("{0}{1}", JobServiceManager.TablePrefix, JobsTableName);
+            return string.Format("{0}{1}", ServiceManager.TablePrefix, JobsTableName);
         }
         public static string JobInstances()
         {
-            return string.Format("{0}{1}", JobServiceManager.TablePrefix, JobInstanceTableName);
+            return string.Format("{0}{1}", ServiceManager.TablePrefix, JobInstanceTableName);
         }
         public static string JobInstanceDetails()
         {
-            return string.Format("{0}{1}", JobServiceManager.TablePrefix, JobInstanceDetailTableName);
+            return string.Format("{0}{1}", ServiceManager.TablePrefix, JobInstanceDetailTableName);
         }
     }
 }

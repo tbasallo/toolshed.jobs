@@ -23,7 +23,7 @@ namespace Toolshed.Jobs
         /// </summary>
         public int MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
 
-        public JobManager(Guid jobId, string version = JobServiceManager.DefaultVersionName)
+        public JobManager(Guid jobId, string version = ServiceManager.DefaultVersionName)
         {
             Jobs = new JobService();
             Job = Jobs.GetJob(jobId, version);
@@ -45,6 +45,12 @@ namespace Toolshed.Jobs
             Job = Jobs.Save(Job);
             Instance = Jobs.Save(Instance);
             Jobs.Save(detail);
+
+            if(detail.Type == JobDetailType.Started.ToString())
+            {
+                Jobs.Save(new JobInstanceHistory(detail.Date, Instance.InstanceId, Job.Id));
+
+            }
         }
 
 
