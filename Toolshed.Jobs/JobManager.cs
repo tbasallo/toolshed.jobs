@@ -19,7 +19,7 @@ namespace Toolshed.Jobs
 
         /// <summary>
         /// The default number of minutes that an instance must be running before it will be aborted IF IsRunningExceptionAborted is true.
-        /// When setting IsRunningExceptionAborted to true, this property should be adjusted to reflect the number of minutes acceptable.
+        /// When setting IsRunningExceptionAborted to true, this property should be adjusted to reflect the number of minutes that is acceptable. The default is 240 minutes (4 hours)
         /// </summary>
         public int MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
 
@@ -58,29 +58,47 @@ namespace Toolshed.Jobs
         {
             if (!(await LoadInstanceAsync(instanceId)))
             {
-                await SaveAsync(Start(message, instanceId));
+                await SaveAsync(await StartAsync(message, instanceId));
             }
 
             return Instance != null;
-
         }
-        public void StartOrLoadJob(Guid instanceId, string message = "Started")
+        public bool StartOrLoadJob(Guid instanceId, string message = "Started")
         {
             if (!LoadInstance(instanceId))
             {
                 Save(Start(message, instanceId));
             }
 
+            return Instance != null;
+        }
+
+        public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
+        {
+            await SaveAsync(await StartAsync(message, instanceId));
+        }
+        public void StartJob(string message = "Started", Guid? instanceId = null)
+        {
             Save(Start(message, instanceId));
         }
 
-        public async Task StartJobAsync(string message = "Started")
+
+        private async Task<JobInstanceDetail> StartAsync(string message, Guid? instanceId = null)
         {
-            await SaveAsync(Start(message));
-        }
-        public void StartJob(string message = "Started")
-        {
-            Save(Start(message));
+            if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
+            {
+                if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
+                {
+                    Instance = await Jobs.GetJobInstanceAsync(Job.Id, Job.LastInstanceId);
+                    await AbortInstanceAsync("Aborted due to running longer than maximum run time");
+                }
+                else
+                {
+                    throw new JobCurrentlyRunningException(Job.LastInstanceId);
+                }
+            }
+
+            return FinalStart(message, instanceId);
         }
         private JobInstanceDetail Start(string message, Guid? instanceId = null)
         {
@@ -88,7 +106,7 @@ namespace Toolshed.Jobs
             {
                 if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
                 {
-                    Instance = new JobInstance(Job.Id, Job.LastInstanceId, Job.Version);
+                    Instance = Jobs.GetJobInstance(Job.Id, Job.LastInstanceId);
                     AbortInstance("Aborted due to running longer than maximum run time");
                 }
                 else
@@ -97,6 +115,10 @@ namespace Toolshed.Jobs
                 }
             }
 
+            return FinalStart(message, instanceId);
+        }
+        private JobInstanceDetail FinalStart(string message, Guid? instanceId = null)
+        {
             Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
 
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
@@ -105,7 +127,6 @@ namespace Toolshed.Jobs
                 Type = JobDetailType.Started,
                 Details = message
             };
-
 
             Instance.TotalDetails = 1;
             Instance.LastOn = detail.Date;
@@ -120,6 +141,7 @@ namespace Toolshed.Jobs
 
             return detail;
         }
+
 
         public bool LoadInstance(Guid instanceId)
         {

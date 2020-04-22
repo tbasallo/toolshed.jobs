@@ -21,7 +21,6 @@ namespace Toolshed.Jobs
             }
         }
 
-
         public JobInstance GetJobInstance(Guid jobId, Guid instanceId)
         {
             var retrieveOperation = TableOperation.Retrieve<JobInstance>(jobId.ToString(), instanceId.ToString());
