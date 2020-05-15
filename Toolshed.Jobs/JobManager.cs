@@ -39,6 +39,11 @@ namespace Toolshed.Jobs
             Job = await Jobs.SaveAsync(Job);
             Instance = await Jobs.SaveAsync(Instance);
             await Jobs.SaveAsync(detail);
+
+            if (detail.Type == JobDetailType.Started.ToString())
+            {
+                await Jobs.SaveAsync(new JobInstanceHistory(detail.Date, Instance.InstanceId, Job.Id));
+            }
         }
         private void Save(JobInstanceDetail detail)
         {
@@ -46,7 +51,7 @@ namespace Toolshed.Jobs
             Instance = Jobs.Save(Instance);
             Jobs.Save(detail);
 
-            if(detail.Type == JobDetailType.Started.ToString())
+            if (detail.Type == JobDetailType.Started.ToString())
             {
                 Jobs.Save(new JobInstanceHistory(detail.Date, Instance.InstanceId, Job.Id));
 
@@ -56,18 +61,22 @@ namespace Toolshed.Jobs
 
         public async Task<bool> StartOrLoadJobAsync(Guid instanceId, string message = "Started")
         {
-            if (!(await LoadInstanceAsync(instanceId)))
+            var instanceExists = await LoadInstanceAsync(instanceId);
+            if (!instanceExists)
             {
-                await SaveAsync(await StartAsync(message, instanceId));
+                var details = await StartAsync(message, instanceId);
+                await SaveAsync(details);
             }
 
             return Instance != null;
         }
         public bool StartOrLoadJob(Guid instanceId, string message = "Started")
         {
-            if (!LoadInstance(instanceId))
+            var instanceExists = LoadInstance(instanceId);
+            if (!instanceExists)
             {
-                Save(Start(message, instanceId));
+                var details = Start(message, instanceId);
+                Save(details);
             }
 
             return Instance != null;
@@ -75,11 +84,13 @@ namespace Toolshed.Jobs
 
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
         {
-            await SaveAsync(await StartAsync(message, instanceId));
+            var details = await StartAsync(message, instanceId);
+            await SaveAsync(details);
         }
         public void StartJob(string message = "Started", Guid? instanceId = null)
         {
-            Save(Start(message, instanceId));
+            var details = Start(message, instanceId);
+            Save(details);
         }
 
 
