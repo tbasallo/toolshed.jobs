@@ -10,7 +10,7 @@ namespace Toolshed.Jobs
     {
         public JobInstanceHistory(DateTime date, Guid instanceId, Guid jobid)
         {
-            PartitionKey = date.ToString("yyyyMMdd)");
+            PartitionKey = $"{jobid}-{date:yyyyMMdd}";
             RowKey = instanceId.ToString();
             InstanceId = instanceId;
             JobId = jobid;

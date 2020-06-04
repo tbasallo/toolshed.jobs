@@ -34,6 +34,13 @@ namespace Toolshed.Jobs
             return result.Result as JobInstance;
         }
 
+        /// <summary>
+        /// Returns the number of entities requested. No order is guaranteed because this table does not store records in a way that returns them in order
+        /// </summary>
+        /// <param name="jobId"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         public async Task<PagedTableEntity<JobInstance>> GetJobInstancesAsync(Guid jobId, int pageSize, TableContinuationToken token = null)
         {
             var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobId.ToString()));
@@ -57,6 +64,7 @@ namespace Toolshed.Jobs
 
             return model;
         }
+
 
         /// <summary>
         /// Returns all job instances by iterating over each segment returned
@@ -82,6 +90,30 @@ namespace Toolshed.Jobs
             return model;
         }
 
+
+        /// <summary>
+        /// Returns all job instances for a given date. Instances will iterated over until all instances are returned
+        /// </summary>
+        public async Task<List<JobInstance>> GetJobInstancesAsync(Guid jobId, DateTime date)
+        {
+            var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{jobId}-{date:yyyyMMdd}"));
+            var segment = await JobInstancesTable.ExecuteQuerySegmentedAsync(query, null);
+
+            var model = new List<JobInstance>();
+
+            if (segment.Results != null)
+            {
+                model.AddRange(segment.Results);
+            }
+
+            while (segment.ContinuationToken != null)
+            {
+                segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query, segment.ContinuationToken);
+                model.AddRange(segment.Results);
+            }
+
+            return model;
+        }
 
 
 
