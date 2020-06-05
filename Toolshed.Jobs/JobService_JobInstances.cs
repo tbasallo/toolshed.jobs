@@ -96,8 +96,7 @@ namespace Toolshed.Jobs
         /// </summary>
         public async Task<List<JobInstance>> GetJobInstancesAsync(Guid jobId, DateTime date)
         {
-            var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{date:yyyyMMdd})"));
-            //var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{jobId}-{date:yyyyMMdd}"));
+            var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{jobId}-{date:yyyyMMdd}"));
             var segment = await JobInstancesTable.ExecuteQuerySegmentedAsync(query, null);
 
             var model = new List<JobInstance>();
