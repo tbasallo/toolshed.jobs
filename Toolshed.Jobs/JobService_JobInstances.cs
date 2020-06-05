@@ -96,12 +96,13 @@ namespace Toolshed.Jobs
         /// </summary>
         public async Task<List<JobInstance>> GetJobInstancesAsync(Guid jobId, DateTime date)
         {
-            var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{jobId}-{date:yyyyMMdd}"));
+            var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{date:yyyyMMdd})"));
+            //var query = new TableQuery<JobInstance>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{jobId}-{date:yyyyMMdd}"));
             var segment = await JobInstancesTable.ExecuteQuerySegmentedAsync(query, null);
 
             var model = new List<JobInstance>();
 
-            if (segment.Results != null)
+            if (segment.Results != null && segment.Results.Count > 0)
             {
                 model.AddRange(segment.Results);
             }
@@ -128,28 +129,6 @@ namespace Toolshed.Jobs
             //var mergeOperation = TableOperation.InsertOrMerge(job);
             var result = JobInstancesTable.Execute(insertOperation);
             return (result.Result as JobInstance);
-        }
-
-
-        /// <summary>
-        /// Inserts or updates/replaces a specified JobInstanceHistory
-        /// </summary>
-        public void Save(JobInstanceHistory jobInstanceHistory)
-        {
-            var insertOperation = TableOperation.InsertOrReplace(jobInstanceHistory);
-            //TODO research performance and operation impact of insert vs. merge
-            //var mergeOperation = TableOperation.InsertOrMerge(job);
-            JobInstancesTable.Execute(insertOperation);
-        }
-        /// <summary>
-        /// Inserts or updates/replaces a specified JobInstanceHistory
-        /// </summary>
-        public async Task SaveAsync(JobInstanceHistory jobInstanceHistory)
-        {
-            var insertOperation = TableOperation.InsertOrReplace(jobInstanceHistory);
-            //TODO research performance and operation impact of insert vs. merge
-            //var mergeOperation = TableOperation.InsertOrMerge(job);
-            await JobInstancesTable.ExecuteAsync(insertOperation);
         }
 
         /// <summary>

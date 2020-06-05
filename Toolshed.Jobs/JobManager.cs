@@ -42,7 +42,11 @@ namespace Toolshed.Jobs
 
             if (detail.Type == JobDetailType.Started.ToString())
             {
-                await Jobs.SaveAsync(new JobInstanceHistory(detail.Date, Instance.InstanceId, Job.Id));
+                await Jobs.SaveAsync(Instance.GetWithDailyPartition());
+            }
+            if (detail.Type == JobDetailType.Complete.ToString())
+            {
+                await Jobs.SaveAsync(Instance.GetWithDailyPartition());
             }
         }
         private void Save(JobInstanceDetail detail)
@@ -51,10 +55,14 @@ namespace Toolshed.Jobs
             Instance = Jobs.Save(Instance);
             Jobs.Save(detail);
 
+
             if (detail.Type == JobDetailType.Started.ToString())
             {
-                Jobs.Save(new JobInstanceHistory(detail.Date, Instance.InstanceId, Job.Id));
-
+                Jobs.Save(Instance.GetWithDailyPartition());
+            }
+            if (detail.Type == JobDetailType.Complete.ToString())
+            {
+                Jobs.Save(Instance.GetWithDailyPartition());
             }
         }
 
