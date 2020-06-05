@@ -46,6 +46,7 @@ namespace Toolshed.Jobs
             return new JobInstance(JobId, InstanceId, StartedOn, JobVersion)
             {
                 CompletedOn = CompletedOn,
+                StartedOn = StartedOn,
                 LastType = LastType,
                 LastOn = LastOn,
                 TotalDetails = TotalDetails,
