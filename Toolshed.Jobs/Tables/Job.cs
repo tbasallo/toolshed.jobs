@@ -12,9 +12,9 @@ namespace Toolshed.Jobs
         public Job(Guid id, string version = ServiceManager.DefaultVersionName)
         {
             PartitionKey = id.ToString();
-            RowKey = version;
+            RowKey = version.ToValue(ServiceManager.DefaultVersionName);
             Id = id;
-            Version = version;
+            Version = version.ToValue(ServiceManager.DefaultVersionName);
         }
 
 

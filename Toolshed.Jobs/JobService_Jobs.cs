@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Microsoft.Azure.Cosmos.Table;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Cosmos.Table;
 namespace Toolshed.Jobs
 {
     public partial class JobService
@@ -21,6 +21,33 @@ namespace Toolshed.Jobs
             }
         }
 
+        /// <summary>
+        /// Create a job
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="isEnabled"></param>
+        /// <param name="isMultipleRunningInstancesAllowed"></param>
+        /// <param name="jobId"></param>
+        /// <param name="version"></param>
+        /// <param name="lastInstanceStatus"></param>
+        /// <returns></returns>
+        public Job CreateJob(string name, string description, bool isEnabled = true, bool isMultipleRunningInstancesAllowed = true, Guid? jobId = null, string version = null, string lastInstanceStatus = "None")
+        {
+            var job = new Job(jobId.GetValueOrDefault(Guid.NewGuid()), version)
+            {
+                CreatedOn = DateTime.UtcNow,
+                IsEnabled = isEnabled,
+                IsMultipleRunningInstancesAllowed = isMultipleRunningInstancesAllowed,
+                LastInstanceId = Guid.Empty,
+                LastInstanceStatus = lastInstanceStatus,
+                Name = name,
+                Description = description
+            };
+            var insertOperation = TableOperation.InsertOrReplace(job);
+            var result = JobsTable.Execute(insertOperation);
+            return (result.Result as Job);
+        }
 
         /// <summary>
         /// Inserts or updates/replaces a specified job
