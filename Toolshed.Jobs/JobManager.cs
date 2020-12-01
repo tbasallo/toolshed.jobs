@@ -38,32 +38,15 @@ namespace Toolshed.Jobs
         {
             Job = await Jobs.SaveAsync(Job);
             Instance = await Jobs.SaveAsync(Instance);
+            await Jobs.SaveAsync(Instance.GetWithDailyPartition());
             await Jobs.SaveAsync(detail);
-
-            if (detail.Type == JobDetailType.Started.ToString())
-            {
-                await Jobs.SaveAsync(Instance.GetWithDailyPartition());
-            }
-            if (detail.Type == JobDetailType.Complete.ToString())
-            {
-                await Jobs.SaveAsync(Instance.GetWithDailyPartition());
-            }
         }
         private void Save(JobInstanceDetail detail)
         {
             Job = Jobs.Save(Job);
             Instance = Jobs.Save(Instance);
+            Jobs.Save(Instance.GetWithDailyPartition());
             Jobs.Save(detail);
-
-
-            if (detail.Type == JobDetailType.Started.ToString())
-            {
-                Jobs.Save(Instance.GetWithDailyPartition());
-            }
-            if (detail.Type == JobDetailType.Complete.ToString())
-            {
-                Jobs.Save(Instance.GetWithDailyPartition());
-            }
         }
 
 
