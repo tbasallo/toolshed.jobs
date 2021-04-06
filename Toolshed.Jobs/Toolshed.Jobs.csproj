@@ -5,7 +5,7 @@
     <AssemblyName>Toolshed.Jobs</AssemblyName>
     <Description>An Azure table storage based job tracking library. Allows for logging of events and steps.</Description>
     <PackageProjectUrl>https://github.com/tbasallo/toolshed.jobs</PackageProjectUrl>
-    <Version>7.5.0</Version>
+    <Version>7.6.0</Version>
     <RepositoryUrl>https://github.com/tbasallo/toolshed.jobs</RepositoryUrl>
     <RepositoryType>GIT</RepositoryType>
     <Authors>Tony Basallo</Authors>
