@@ -33,6 +33,12 @@ namespace Toolshed.Jobs
             var result = await JobInstancesTable.ExecuteAsync(retrieveOperation);
             return result.Result as JobInstance;
         }
+        public async Task<JobInstance> GetJobInstanceAsync(Guid jobId, DateTime date, Guid instanceId)
+        {
+            var retrieveOperation = TableOperation.Retrieve<JobInstance>($"{jobId}-{date:yyyyMMdd}", instanceId.ToString());
+            var result = await JobInstancesTable.ExecuteAsync(retrieveOperation);
+            return result.Result as JobInstance;
+        }
 
         /// <summary>
         /// Returns the number of entities requested. No order is guaranteed because this table does not store records in a way that returns them in order
@@ -162,8 +168,14 @@ namespace Toolshed.Jobs
             var deleteOperation = TableOperation.Delete(jobInstance);
             var result = await JobInstancesTable.ExecuteAsync(deleteOperation);
 
-            var succeeded = result.HttpStatusCode >= 200 && result.HttpStatusCode < 300;
+            var history = await GetJobInstanceAsync(jobInstance.JobId, jobInstance.StartedOn, jobInstance.InstanceId);
+            if (history != null)
+            {
+                deleteOperation = TableOperation.Delete(history);
+                _ = await JobInstancesTable.ExecuteAsync(deleteOperation);
+            }
 
+            var succeeded = result.HttpStatusCode >= 200 && result.HttpStatusCode < 300;
             if (succeeded)
             {
                 //TODO if we got here, but this fails then we have orphan records in the details table.
