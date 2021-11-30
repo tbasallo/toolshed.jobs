@@ -92,7 +92,15 @@ namespace Toolshed.Jobs
                 if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
                 {
                     Instance = await Jobs.GetJobInstanceAsync(Job.Id, Job.LastInstanceId);
-                    await AbortInstanceAsync("Aborted due to running longer than maximum run time");
+                    if (Instance != null)
+                    {
+                        await AbortInstanceAsync("Aborted due to running longer than maximum run time");
+                    }
+                    else
+                    {
+                        Job.IsRunning = false;
+                        await Jobs.SaveAsync(Job);
+                    }
                 }
                 else
                 {
@@ -109,6 +117,15 @@ namespace Toolshed.Jobs
                 if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
                 {
                     Instance = Jobs.GetJobInstance(Job.Id, Job.LastInstanceId);
+                    if (Instance != null)
+                    {
+                        AbortInstance("Aborted due to running longer than maximum run time");
+                    }
+                    else
+                    {
+                        Job.IsRunning = false;
+                        Jobs.Save(Job);
+                    }
                     AbortInstance("Aborted due to running longer than maximum run time");
                 }
                 else
