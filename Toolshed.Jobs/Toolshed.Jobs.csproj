@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Toolshed.Jobs</AssemblyName>
     <Description>An Azure table storage based job tracking library. Allows for logging of events and steps.</Description>
     <PackageProjectUrl>https://github.com/tbasallo/toolshed.jobs</PackageProjectUrl>
@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.7" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
     <PackageReference Include="Toolshed" Version="7.6.2" />
   </ItemGroup>
 
