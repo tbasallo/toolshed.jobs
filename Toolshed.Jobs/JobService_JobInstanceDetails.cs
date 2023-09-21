@@ -1,22 +1,23 @@
-﻿using System;
+﻿using Azure.Data.Tables;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Cosmos.Table;
+using Toolshed.AzureStorage;
 namespace Toolshed.Jobs
 {
     public partial class JobService
     {
 
 
-        private CloudTable __jobInstanceDetailsTable;
-        private CloudTable JobInstanceDetailsTable
+        private TableClient __jobInstanceDetailsTable;
+        private TableClient JobInstanceDetailsTable
         {
             get
             {
                 if (__jobInstanceDetailsTable == null)
                 {
-                    __jobInstanceDetailsTable = TableClient.GetTableReference(TableAssist.JobInstanceDetails());
+                    __jobInstanceDetailsTable = ServiceManager.GetTableClient(TableAssist.JobInstanceDetails());
                 }
 
                 return __jobInstanceDetailsTable;
@@ -26,16 +27,7 @@ namespace Toolshed.Jobs
 
 
 
-        /// <summary>
-        /// Returns all job instance details
-        /// </summary>
-        public List<JobInstanceDetail> GetJobInstanceDetails(Guid instanceId)
-        {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
-            var results = JobInstanceDetailsTable.ExecuteQuery(query);
 
-            return results.ToList();
-        }
 
         /// <summary>
         /// Returns all job instance details by iterating over each segment returned
@@ -43,23 +35,8 @@ namespace Toolshed.Jobs
         /// <returns></returns>
         public async Task<List<JobInstanceDetail>> GetJobInstanceDetailsAsync(Guid instanceId)
         {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
-            var segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query, null);
+            return await JobInstanceDetailsTable.GetEntitiesAsync<JobInstanceDetail>(instanceId.ToString());
 
-            var model = new List<JobInstanceDetail>();
-
-            if (segment.Results != null)
-            {
-                model.AddRange(segment.Results.ToList());
-            }
-
-            while (segment.ContinuationToken != null)
-            {
-                segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query, segment.ContinuationToken);
-                model.AddRange(segment.Results.ToList());
-            }
-
-            return model;
         }
 
         /// <summary>
@@ -68,58 +45,27 @@ namespace Toolshed.Jobs
         /// <param name="pageSize">How many entities to return with each call</param>
         /// <param name="token">The continuation token from the previous call</param>
         /// <returns></returns>
-        public async Task<PagedTableEntity<JobInstanceDetail>> GetJobInstanceDetailsAsync(Guid instanceId, int pageSize, TableContinuationToken token = null)
+        public async Task<List<JobInstanceDetail>> GetJobInstanceDetailsAsync(Guid instanceId, int pageSize)
         {
-            var query = new TableQuery<JobInstanceDetail>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId.ToString()));
-            TableQuerySegment<JobInstanceDetail> segment = await JobInstanceDetailsTable.ExecuteQuerySegmentedAsync(query.Take(pageSize), token);
-
-            var model = new PagedTableEntity<JobInstanceDetail>
-            {
-                Entities = segment.Results.ToList()
-            };
-            if (segment.ContinuationToken != null)
-            {
-                model.NextPartitionKey = segment.ContinuationToken.NextPartitionKey;
-                model.NextRowKey = segment.ContinuationToken.NextRowKey;
-                model.TargetLocation = segment.ContinuationToken.TargetLocation;
-            }
-            if (token != null)
-            {
-                model.PreviousPartitionKey = token.NextPartitionKey;
-                model.PreviousRowKey = token.NextRowKey;
-            }
-
-            return model;
+            return await JobInstanceDetailsTable.GetEntitiesAsync<JobInstanceDetail>(instanceId.ToString());
         }
+
+
 
         /// <summary>
         /// Inserts a specified job instance details
         /// </summary>
-        public JobInstanceDetail Save(JobInstanceDetail job)
+        public async Task SaveAsync(JobInstanceDetail job)
         {
-            var insertOperation = TableOperation.Insert(job);
-            var result = JobInstanceDetailsTable.Execute(insertOperation);
-            return (result.Result as JobInstanceDetail);
-        }
-
-        /// <summary>
-        /// Inserts a specified job instance details
-        /// </summary>
-        public async Task<JobInstanceDetail> SaveAsync(JobInstanceDetail job)
-        {
-            var insertOperation = TableOperation.Insert(job);
-            var result = await JobInstanceDetailsTable.ExecuteAsync(insertOperation);
-            return (result.Result as JobInstanceDetail);
+            _ = await JobInstanceDetailsTable.UpsertEntityAsync(job);
         }
 
         /// <summary>
         /// Deletes the specified job
         /// </summary>
-        public async Task Delete(JobInstanceDetail job)
+        public async Task DeleteAsync(JobInstanceDetail job)
         {
-            var deleteOperation = TableOperation.Delete(job);
-            //TODO??? do weed to return something var result = await JobsTable.ExecuteAsync(deleteOperation);
-            await JobInstanceDetailsTable.ExecuteAsync(deleteOperation);
+            await JobInstanceDetailsTable.DeleteEntityAsync(job.PartitionKey, job.RowKey);
         }
 
         /// <summary>
@@ -129,7 +75,15 @@ namespace Toolshed.Jobs
         /// <returns>TODO// what should we return???</returns>
         public async Task DeleteAll(Guid instanceId)
         {
-            await JobServiceHelper.DeleteAllEntitiesInBatchesAsync(JobInstanceDetailsTable, instanceId.ToString());
+            var entities = await JobInstanceDetailsTable.GetEntitiesAsync<JobInstanceDetail>(instanceId.ToString());
+            if (entities.Count > 0)
+            {
+                foreach (var item in entities)
+                {
+                    await DeleteAsync(item);
+                }
+
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Toolshed.Jobs
@@ -23,11 +24,14 @@ namespace Toolshed.Jobs
         /// </summary>
         public int MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
 
-        public JobManager(Guid jobId, string version = ServiceManager.DefaultVersionName)
+        public JobManager()
         {
             Jobs = new JobService();
-            Job = Jobs.GetJob(jobId, version);
+        }
 
+        public async Task LoadJobAsync(Guid jobId, string version = ServiceManager.DefaultVersionName)
+        {
+            Job = await Jobs.GetJobAsync(jobId, version);
             if (Job == null)
             {
                 throw new NullReferenceException("Job not found (" + jobId + ")");
@@ -36,17 +40,10 @@ namespace Toolshed.Jobs
 
         private async Task SaveAsync(JobInstanceDetail detail)
         {
-            Job = await Jobs.SaveAsync(Job);
-            Instance = await Jobs.SaveAsync(Instance);
+            await Jobs.SaveAsync(Job);
+            await Jobs.SaveAsync(Instance);
             await Jobs.SaveAsync(Instance.GetWithDailyPartition());
             await Jobs.SaveAsync(detail);
-        }
-        private void Save(JobInstanceDetail detail)
-        {
-            Job = Jobs.Save(Job);
-            Instance = Jobs.Save(Instance);
-            Jobs.Save(Instance.GetWithDailyPartition());
-            Jobs.Save(detail);
         }
 
 
@@ -61,27 +58,11 @@ namespace Toolshed.Jobs
 
             return Instance != null;
         }
-        public bool StartOrLoadJob(Guid instanceId, string message = "Started")
-        {
-            var instanceExists = LoadInstance(instanceId);
-            if (!instanceExists)
-            {
-                var details = Start(message, instanceId);
-                Save(details);
-            }
-
-            return Instance != null;
-        }
 
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
         {
             var details = await StartAsync(message, instanceId);
             await SaveAsync(details);
-        }
-        public void StartJob(string message = "Started", Guid? instanceId = null)
-        {
-            var details = Start(message, instanceId);
-            Save(details);
         }
 
 
@@ -101,32 +82,6 @@ namespace Toolshed.Jobs
                         Job.IsRunning = false;
                         await Jobs.SaveAsync(Job);
                     }
-                }
-                else
-                {
-                    throw new JobCurrentlyRunningException(Job.LastInstanceId);
-                }
-            }
-
-            return FinalStart(message, instanceId);
-        }
-        private JobInstanceDetail Start(string message, Guid? instanceId = null)
-        {
-            if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
-            {
-                if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
-                {
-                    Instance = Jobs.GetJobInstance(Job.Id, Job.LastInstanceId);
-                    if (Instance != null)
-                    {
-                        AbortInstance("Aborted due to running longer than maximum run time");
-                    }
-                    else
-                    {
-                        Job.IsRunning = false;
-                        Jobs.Save(Job);
-                    }
-                    AbortInstance("Aborted due to running longer than maximum run time");
                 }
                 else
                 {
@@ -162,11 +117,6 @@ namespace Toolshed.Jobs
         }
 
 
-        public bool LoadInstance(Guid instanceId)
-        {
-            Instance = Jobs.GetJobInstance(Job.Id, instanceId);
-            return Instance != null;
-        }
         public async Task<bool> LoadInstanceAsync(Guid instanceId)
         {
             Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
@@ -178,10 +128,6 @@ namespace Toolshed.Jobs
         public async Task CompleteJobAsync(string message = "Completed")
         {
             await SaveAsync(Complete(message));
-        }
-        public void CompleteJob(string message = "Completed")
-        {
-            Save(Complete(message));
         }
         private JobInstanceDetail Complete(string message)
         {
@@ -212,10 +158,6 @@ namespace Toolshed.Jobs
         public async Task AbortInstanceAsync(string message = "Job instance manually aborted")
         {
             await SaveAsync(Abort(message));
-        }
-        public void AbortInstance(string message = "Job instance manually aborted")
-        {
-            Save(Abort(message));
         }
         private JobInstanceDetail Abort(string message)
         {
@@ -289,32 +231,6 @@ namespace Toolshed.Jobs
         {
             var detail = Generate(type, details);
             await SaveAsync(detail);
-        }
-
-        public void Add(Exception exception)
-        {
-            Add(JobLogLevel.Exception, exception.ToString());
-        }
-        public void Add(JobLogLevel type, string detailsFormat, object arg0)
-        {
-            Add(type, string.Format(detailsFormat, arg0));
-        }
-        public void Add(JobLogLevel type, string detailsFormat, object arg0, object arg1)
-        {
-            Add(type, string.Format(detailsFormat, arg0, arg1));
-        }
-        public void Add(JobLogLevel type, string detailsFormat, object arg0, object arg1, object arg2)
-        {
-            Add(type, string.Format(detailsFormat, arg0, arg1, arg2));
-        }
-        public void Add(JobLogLevel type, string detailsFormat, params object[] args)
-        {
-            Add(type, string.Format(detailsFormat, args));
-        }
-        public void Add(JobLogLevel type, string details)
-        {
-            var detail = Generate(type, details);
-            Save(detail);
         }
 
         JobInstanceDetail Generate(JobLogLevel type, string details)

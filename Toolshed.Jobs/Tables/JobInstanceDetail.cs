@@ -1,9 +1,9 @@
 ﻿using System;
-using Microsoft.Azure.Cosmos.Table;
+using Toolshed.AzureStorage;
 
 namespace Toolshed.Jobs
 {
-    public class JobInstanceDetail : TableEntity
+    public class JobInstanceDetail : BaseTableEntity
     {
         public JobInstanceDetail() { }
 
