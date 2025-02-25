@@ -12,7 +12,7 @@ namespace Toolshed.Jobs
         internal static string ConnectionString { get; private set; }
         internal static string TablePrefix { get; set; }
 
- 
+
         public static void InitConnectionString(string connectionString)
         {
             ConnectionString = connectionString;

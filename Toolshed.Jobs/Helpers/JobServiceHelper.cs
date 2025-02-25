@@ -1,9 +1,4 @@
-﻿using Azure.Data.Tables;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-//namespace Toolshed.Jobs
+﻿//namespace Toolshed.Jobs
 //{
 //    internal static class JobServiceHelper
 //    {

@@ -1,7 +1,9 @@
-﻿using Azure.Data.Tables;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using Azure.Data.Tables;
+
 using Toolshed.AzureStorage;
 using Toolshed.Jobs.Models;
 namespace Toolshed.Jobs
@@ -37,7 +39,7 @@ namespace Toolshed.Jobs
         /// </summary>
         public async Task<List<JobInstance>> GetJobInstancesAsync(Guid jobId)
         {
-            return await JobInstancesTable.GetEntitiesAsync< JobInstance>(jobId.ToString());
+            return await JobInstancesTable.GetEntitiesAsync<JobInstance>(jobId.ToString());
         }
 
 

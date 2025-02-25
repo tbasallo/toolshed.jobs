@@ -1,8 +1,10 @@
-﻿using Azure.Data.Tables;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Azure.Data.Tables;
+
 using Toolshed.AzureStorage;
 namespace Toolshed.Jobs
 {
@@ -64,7 +66,7 @@ namespace Toolshed.Jobs
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
         public async Task DeleteAsync(Job job)
-        {                        
+        {
             //TODO return more than a simple boolean and/or create a cleanup method that can run on a schedule for such events
             var instances = await GetJobInstancesAsync(job.Id);
             foreach (var instance in instances)
@@ -94,7 +96,7 @@ namespace Toolshed.Jobs
         public async Task<Job> GetJobAsync(Guid jobId)
         {
             var jobs = await JobsTable.GetEntitiesAsync<Job>(jobId.ToString());
-            if(jobs.Count == 0)
+            if (jobs.Count == 0)
             {
                 return null;
             }
@@ -108,7 +110,7 @@ namespace Toolshed.Jobs
         /// <returns>Indicates whether the operation was successful</returns>
         public async Task<Job> GetJobAsync(Guid jobId, string version)
         {
-            return  await JobsTable.GetEntityWhenExistsAsync<Job>(jobId.ToString(), version);
+            return await JobsTable.GetEntityWhenExistsAsync<Job>(jobId.ToString(), version);
         }
     }
 }

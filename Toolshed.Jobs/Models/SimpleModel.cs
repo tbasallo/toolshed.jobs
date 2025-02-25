@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Toolshed.AzureStorage;
+﻿using Toolshed.AzureStorage;
 
 namespace Toolshed.Jobs.Models;
 internal class SimpleModel : BaseTableEntity
