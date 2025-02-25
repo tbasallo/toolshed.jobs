@@ -1,9 +1,9 @@
-name: Publish NuGet Package
+name: Publish to NuGet
  
 on:
   push:
     branches:
-      - main
+      - master
       - 'release/*' # Trigger on any branch named 'release/*'
  
 jobs:
