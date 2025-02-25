@@ -64,15 +64,16 @@ namespace Toolshed.Jobs
         /// <param name="job"></param>
         /// <returns>Indicates whether the operation was successful</returns>
         public async Task DeleteAsync(Job job)
-        {
-            _ = await JobsTable.DeleteEntityAsync(job.PartitionKey, job.RowKey);
-            //TODO if we got here, but this fails then we have orphan records
+        {                        
             //TODO return more than a simple boolean and/or create a cleanup method that can run on a schedule for such events
             var instances = await GetJobInstancesAsync(job.Id);
             foreach (var instance in instances)
             {
                 await DeleteAsync(instance);
             }
+
+            //if we got here, then all the records are deleted and we can move forward with life
+            _ = await JobsTable.DeleteEntityAsync(job.PartitionKey, job.RowKey);
         }
 
         /// <summary>
