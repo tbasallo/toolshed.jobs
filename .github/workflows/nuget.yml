@@ -30,7 +30,7 @@ jobs:
       run: echo "::set-output name=VERSION::$(dotnet msbuild -nologo -t:GetVersion -property:Version)"      
  
     - name: Pack the NuGet package      
-      run: dotnet pack --configuration Release --no-build --output ./nupkg /p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
+      run: dotnet pack --configuration Release /p:PackageVersion=${{ steps.get_version.outputs.VERSION }}
  
     - name: Publish NuGet package
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json
