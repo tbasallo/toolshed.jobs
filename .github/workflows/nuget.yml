@@ -1,36 +1,31 @@
-name: Deploy NuGet Package
-
+name: Publish to Nuget
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
-
+      - master # Default release branch
 jobs:
-  build:
+  publish:
+    name: list on nuget
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '9.0.x'
-
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-
-    - name: Pack
-      run: dotnet pack --configuration Release --no-build --output ./nupkg
-
-    - name: Publish to NuGet
-      env:
-        NUGET_API_KEY: ${{secrets.NUGET_KEY}}
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+      # Required for a specific dotnet version that doesn't come with ubuntu-latest / windows-latest
+      # Visit bit.ly/2synnZl to see the list of SDKs that are pre-installed with ubuntu-latest / windows-latest
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 9.0.x
+      
+      # Publish
+      - name: publish on version change
+        uses: rohith/publish-nuget@v2
+        with:
+          PROJECT_FILE_PATH: Toolshed.Jobs/Toolshed.Jobs.csproj # Relative to repository root
+          # VERSION_FILE_PATH: Directory.Build.props # Filepath with version info, relative to repository root. Defaults to project file
+          VERSION_REGEX: <Version>(.*)<\/Version> # Regex pattern to extract version info in a capturing group
+          # VERSION_STATIC: Bypasses version resolution; useful for external providers like Nerdbank.GitVersioning
+          # TAG_COMMIT: true # Flag to enable / disalge git tagging
+          # TAG_FORMAT: v* # Format of the git tag, [*] gets replaced with version
+          NUGET_KEY: ${{secrets.NUGET_KEY}} # nuget.org API key
+          # PACKAGE_NAME: NuGet package name, required when it's different from project name. Defaults to project name
