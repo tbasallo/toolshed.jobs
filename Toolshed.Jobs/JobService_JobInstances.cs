@@ -69,7 +69,7 @@ namespace Toolshed.Jobs
         /// <returns>Indicates whether the operation was successful</returns>
         public async Task DeleteAsync(JobInstance jobInstance)
         {
-            _ = await JobInstancesTable.DeleteEntityAsync(jobInstance.PartitionKey, jobInstance.RowKey);
+            await DeleteAll(jobInstance.InstanceId);
 
             var history = await GetJobInstanceAsync(jobInstance.JobId, jobInstance.StartedOn, jobInstance.InstanceId);
             if (history != null)
@@ -77,15 +77,8 @@ namespace Toolshed.Jobs
                 _ = await JobInstancesTable.DeleteEntityAsync(history.PartitionKey, history.RowKey);
             }
 
-            var moreHistory = await JobInstanceDetailsTable.GetEntitiesAsync<SimpleModel>(jobInstance.PartitionKey);
-            if (moreHistory.Count > 0)
-            {
-                foreach (var item in moreHistory)
-                {
-                    _ = await JobInstancesTable.DeleteEntityAsync(item.PartitionKey, item.RowKey);
 
-                }
-            }
+            _ = await JobInstancesTable.DeleteEntityAsync(jobInstance.PartitionKey, jobInstance.RowKey);
         }
     }
 }

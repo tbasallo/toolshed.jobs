@@ -83,7 +83,6 @@ namespace Toolshed.Jobs
                 {
                     await DeleteAsync(item);
                 }
-
             }
         }
     }
