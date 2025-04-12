@@ -62,8 +62,6 @@ namespace Toolshed.Jobs
             var details = await StartAsync(message, instanceId);
             await SaveAsync(details);
         }
-
-
         private async Task<JobInstanceDetail> StartAsync(string message, Guid? instanceId = null)
         {
             if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
@@ -89,30 +87,6 @@ namespace Toolshed.Jobs
 
             return FinalStart(message, instanceId);
         }
-        private JobInstanceDetail FinalStart(string message, Guid? instanceId = null)
-        {
-            Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
-
-            var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
-            {
-                Date = DateTime.UtcNow,
-                Type = JobDetailType.Started,
-                Details = message
-            };
-
-            Instance.TotalDetails = 1;
-            Instance.LastOn = detail.Date;
-            Instance.LastType = detail.Type;
-            Instance.StartedOn = Instance.LastOn;
-
-            Job.LastInstanceStatusOn = detail.Date;
-            Job.LastInstanceStatus = detail.Type.ToString();
-            Job.TotalInstances++;
-            Job.LastInstanceId = Instance.InstanceId;
-            Job.IsRunning = true;
-
-            return detail;
-        }
 
 
         public async Task<bool> LoadInstanceAsync(Guid instanceId)
@@ -126,82 +100,10 @@ namespace Toolshed.Jobs
         public async Task CompleteJobAsync(string message = "Completed")
         {
             await SaveAsync(Complete(message));
-        }
-        private JobInstanceDetail Complete(string message)
-        {
-            var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
-            {
-                Date = DateTime.UtcNow,
-                Type = JobDetailType.Complete,
-                Details = message
-            };
-
-            Job.LastInstanceStatus = detail.Type;
-            Job.LastInstanceStatusOn = detail.Date;
-            Job.LastInstanceId = Instance.InstanceId;
-            Job.IsRunning = false;
-
-            Instance.TotalDetails++;
-            Instance.LastOn = detail.Date;
-            Instance.LastType = detail.Type;
-            Instance.CompletedOn = detail.Date;
-
-            Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
-            Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
-
-            return detail;
-        }
-
-
+        }        
         public async Task AbortInstanceAsync(string message = "Job instance manually aborted")
         {
             await SaveAsync(Abort(message));
-        }
-        private JobInstanceDetail Abort(string message)
-        {
-            if (Instance == null)
-            {
-                throw new ArgumentNullException("No instance to abort");
-            }
-
-            var now = DateTime.UtcNow;
-            Instance.TotalDetails++;
-
-            JobInstanceDetail detail;
-            if (Instance.CompletedOn.HasValue)
-            {
-                detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
-                {
-                    Date = DateTime.UtcNow,
-                    Type = JobDetailType.Info,
-                    Details = "Instance already completed, abort request ignored"
-                };
-            }
-            else
-            {
-                Instance.CompletedOn = now;
-                Instance.HasError = true;
-                Instance.LastOn = now;
-                Instance.LastType = JobDetailType.Aborted;
-                Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
-
-                if (Job.LastInstanceId == Instance.InstanceId)
-                {
-                    Job.IsRunning = false;
-                    Job.LastInstanceStatusOn = now;
-                    Job.LastInstanceStatus = JobDetailType.Aborted;
-                    Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
-                }
-
-                detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
-                {
-                    Date = DateTime.UtcNow,
-                    Type = JobDetailType.Aborted,
-                    Details = message
-                };
-            }
-
-            return detail;
         }
 
 
@@ -231,6 +133,125 @@ namespace Toolshed.Jobs
             await SaveAsync(detail);
         }
 
+
+        public async Task AddInfoAsync(string message)
+        {
+            await AddAsync(JobLogLevel.Info, message);
+        }
+        public async Task AddWarningAsync(string message)
+        {
+            await AddAsync(JobLogLevel.Warning, message);
+        }
+        public async Task AddErrorAsync(string message)
+        {
+            await AddAsync(JobLogLevel.Error, message);
+        }        
+
+
+
+
+
+
+
+
+        JobInstanceDetail FinalStart(string message, Guid? instanceId = null)
+        {
+            Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
+
+            var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
+            {
+                Date = DateTime.UtcNow,
+                Type = JobDetailType.Started,
+                Details = message
+            };
+
+            Instance.TotalDetails = 1;
+            Instance.LastOn = detail.Date;
+            Instance.LastType = detail.Type;
+            Instance.StartedOn = Instance.LastOn;
+
+            Job.LastInstanceStatusOn = detail.Date;
+            Job.LastInstanceStatus = detail.Type.ToString();
+            Job.IsRunning = true;
+            Job.TotalInstancesRunning++;
+            Job.TotalInstances++;
+            Job.TotalLifetimeInstances++;
+            Job.LastInstanceId = Instance.InstanceId;
+
+            return detail;
+        }
+        JobInstanceDetail Complete(string message)
+        {
+            var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
+            {
+                Date = DateTime.UtcNow,
+                Type = JobDetailType.Complete,
+                Details = message
+            };
+
+            Job.LastInstanceStatus = detail.Type;
+            Job.LastInstanceStatusOn = detail.Date;
+            Job.LastInstanceId = Instance.InstanceId;
+            Job.IsRunning = false;
+
+            Instance.TotalDetails++;
+            Instance.LastOn = detail.Date;
+            Instance.LastType = detail.Type;
+            Instance.CompletedOn = detail.Date;
+
+            Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
+            Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
+
+            return detail;
+        }
+        JobInstanceDetail Abort(string message)
+        {
+            if (Instance == null)
+            {
+                throw new ArgumentNullException("No instance to abort");
+            }
+
+            var now = DateTime.UtcNow;
+            Instance.TotalDetails++;
+
+            JobInstanceDetail detail;
+            if (Instance.CompletedOn.HasValue)
+            {
+                detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
+                {
+                    Date = DateTime.UtcNow,
+                    Type = JobDetailType.Info,
+                    Details = "Instance already completed, abort request ignored"
+                };
+            }
+            else
+            {
+                Instance.CompletedOn = now;
+                Instance.HasError = true;
+                Instance.LastOn = now;
+                Instance.LastType = JobDetailType.Aborted;
+                Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
+
+                if (Job.LastInstanceId == Instance.InstanceId)
+                {
+                    Job.HasError = true;
+                    Job.TotalErrors++;
+                    Job.IsRunning = false;
+                    Job.LastInstanceStatusOn = now;
+                    Job.LastInstanceStatus = JobDetailType.Aborted;
+                    Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
+                }
+
+                detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
+                {
+                    Date = DateTime.UtcNow,
+                    Type = JobDetailType.Aborted,
+                    Details = message
+                };
+            }
+
+            return detail;
+        }
         JobInstanceDetail Generate(JobLogLevel type, string details)
         {
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
@@ -262,9 +283,22 @@ namespace Toolshed.Jobs
             Job.LastInstanceStatusOn = detail.Date;
             Job.LastInstanceId = Instance.InstanceId;
             Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
-            Job.HasWarning = Instance.HasWarning;
-            Job.HasException = Instance.HasException;
-            Job.HasError = Instance.HasError;
+
+            if (!Job.HasException && Instance.HasException)
+            {
+                Job.HasException = Instance.HasException;
+                Job.TotalExceptions++;
+            }
+            if (!Job.HasError && Instance.HasError)
+            {
+                Job.HasError = Instance.HasError;
+                Job.TotalErrors++;
+            }
+            if (!Job.HasWarning && Instance.HasWarning)
+            {
+                Job.HasWarning = Instance.HasWarning;
+                Job.TotalWarnings++;
+            }
 
             return detail;
         }

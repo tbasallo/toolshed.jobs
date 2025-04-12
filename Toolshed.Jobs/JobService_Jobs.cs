@@ -79,6 +79,27 @@ namespace Toolshed.Jobs
         }
 
         /// <summary>
+        /// Deletes the specified job
+        /// </summary>
+        /// <param name="job"></param>
+        /// <returns>Indicates whether the operation was successful</returns>
+        public async Task ResetStatisticsAsync(Guid id)
+        {
+            var job = await GetJobAsync(id);
+            job.StatsLastUpdatedOn = DateTime.UtcNow;
+            job.TotalErrors = 0;
+            job.TotalWarnings = 0;
+            job.TotalExceptions = 0;
+            job.TotalInstances = 0;
+            if (job.TotalInstancesRunning == 0 && job.TotalInstances > 0)
+            {
+                job.TotalInstancesRunning = job.TotalInstances;
+            }
+
+            await SaveAsync(job);
+        }
+
+        /// <summary>
         /// Returns all jobs by iterating over each segment returned
         /// </summary>
         /// <returns></returns>
