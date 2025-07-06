@@ -45,7 +45,8 @@ namespace Toolshed.Jobs
                 LastInstanceId = Guid.Empty,
                 LastInstanceStatus = lastInstanceStatus,
                 Name = name,
-                Description = description
+                Description = description,
+                StatsLastUpdatedOn = DateTime.UtcNow
             };
             _ = await JobsTable.UpsertEntityAsync(job);
         }
@@ -57,6 +58,11 @@ namespace Toolshed.Jobs
         /// </summary>
         public async Task SaveAsync(Job job)
         {
+            if(!job.StatsLastUpdatedOn.IsRealDate())
+            {
+                job.StatsLastUpdatedOn = DateTime.UtcNow.AddDays(-365);
+            }
+
             _ = await JobsTable.UpsertEntityAsync(job);
         }
 

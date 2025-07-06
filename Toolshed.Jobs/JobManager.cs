@@ -45,7 +45,7 @@ namespace Toolshed.Jobs
         }
 
 
-        public async Task<bool> StartOrLoadJobAsync(Guid instanceId, string message = "Started")
+        public async Task StartOrLoadJobAsync(Guid jobId, Guid instanceId, string message = "Started")
         {
             var instanceExists = await LoadInstanceAsync(instanceId);
             if (!instanceExists)
@@ -53,8 +53,11 @@ namespace Toolshed.Jobs
                 var details = await StartAsync(message, instanceId);
                 await SaveAsync(details);
             }
-
-            return Instance != null;
+            else
+            {
+                await LoadJobAsync(jobId);
+                await StartJobAsync(message, instanceId);
+            }            
         }
 
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
@@ -100,7 +103,7 @@ namespace Toolshed.Jobs
         public async Task CompleteJobAsync(string message = "Completed")
         {
             await SaveAsync(Complete(message));
-        }        
+        }
         public async Task AbortInstanceAsync(string message = "Job instance manually aborted")
         {
             await SaveAsync(Abort(message));
@@ -145,7 +148,7 @@ namespace Toolshed.Jobs
         public async Task AddErrorAsync(string message)
         {
             await AddAsync(JobLogLevel.Error, message);
-        }        
+        }
 
 
 
