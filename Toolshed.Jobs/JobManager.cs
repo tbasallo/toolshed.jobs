@@ -29,36 +29,31 @@ namespace Toolshed.Jobs
 
         public async Task LoadJobAsync(Guid jobId, string version = ServiceManager.DefaultVersionName)
         {
-            Job = await Jobs.GetJobAsync(jobId, version);
-            if (Job == null)
+            if(Job is null || Job.Id != jobId || Job.Version != version)
             {
-                throw new NullReferenceException("Job not found (" + jobId + ")");
+                Job = await Jobs.GetJobAsync(jobId, version);
+                if (Job == null)
+                {
+                    throw new NullReferenceException("Job not found (" + jobId + ")");
+                }
             }
         }
-
-        private async Task SaveAsync(JobInstanceDetail detail)
-        {
-            await Jobs.SaveAsync(Job);
-            await Jobs.SaveAsync(Instance);
-            await Jobs.SaveAsync(Instance.GetWithDailyPartition());
-            await Jobs.SaveAsync(detail);
-        }
-
-
         public async Task StartOrLoadJobAsync(Guid jobId, Guid instanceId, string message = "Started")
         {
             await LoadJobAsync(jobId);
 
             _ = await LoadInstanceAsync(instanceId);
+            if (Instance is null)
+            {
+                await StartJobAsync(message, instanceId);
+            }
+        }
+        public async Task StartJobAsync(Guid jobId, string message = "Started", Guid? instanceId = null)
+        {
+            await LoadJobAsync(jobId);
             await StartJobAsync(message, instanceId);
         }
-
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
-        {
-            var details = await StartAsync(message, instanceId);
-            await SaveAsync(details);
-        }
-        private async Task<JobInstanceDetail> StartAsync(string message, Guid? instanceId = null)
         {
             if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
             {
@@ -81,8 +76,22 @@ namespace Toolshed.Jobs
                 }
             }
 
-            return FinalStart(message, instanceId);
+            _ = FinalStart(message, instanceId);
         }
+
+
+
+
+        private async Task SaveAsync(JobInstanceDetail detail)
+        {
+            await Jobs.SaveAsync(Job);
+            await Jobs.SaveAsync(Instance);
+            await Jobs.SaveAsync(Instance.GetWithDailyPartition());
+            await Jobs.SaveAsync(detail);
+        }
+
+
+
 
 
         public async Task<bool> LoadInstanceAsync(Guid instanceId)
