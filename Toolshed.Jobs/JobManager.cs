@@ -47,17 +47,10 @@ namespace Toolshed.Jobs
 
         public async Task StartOrLoadJobAsync(Guid jobId, Guid instanceId, string message = "Started")
         {
-            var instanceExists = await LoadInstanceAsync(instanceId);
-            if (!instanceExists)
-            {
-                var details = await StartAsync(message, instanceId);
-                await SaveAsync(details);
-            }
-            else
-            {
-                await LoadJobAsync(jobId);
-                await StartJobAsync(message, instanceId);
-            }            
+            await LoadJobAsync(jobId);
+
+            _ = await LoadInstanceAsync(instanceId);
+            await StartJobAsync(message, instanceId);
         }
 
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
