@@ -112,9 +112,14 @@ namespace Toolshed.Jobs
         }
 
 
-        public async Task AddAsync(Exception exception)
+        public async Task AddAsync(Exception exception, string? message = null)
         {
             await AddAsync(JobLogLevel.Exception, exception.ToString());
+
+            if(!string.IsNullOrEmpty(message))
+            {
+                await AddAsync(JobLogLevel.Exception, $"{exception.Message}: {message}");
+            }
         }
         public async Task AddAsync(JobLogLevel type, string detailsFormat, object arg0)
         {
