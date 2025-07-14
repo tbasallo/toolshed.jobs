@@ -187,6 +187,9 @@ namespace Toolshed.Jobs
             Job.TotalInstances++;
             Job.TotalLifetimeInstances++;
             Job.LastInstanceId = Instance.InstanceId;
+            Job.HasException = Instance.HasException;
+            Job.HasError = Instance.HasError;
+            Job.HasWarning = Instance.HasWarning;
 
             return detail;
         }
@@ -199,18 +202,20 @@ namespace Toolshed.Jobs
                 Details = message
             };
 
-            Job.LastInstanceStatus = detail.Type;
-            Job.LastInstanceStatusOn = detail.Date;
-            Job.LastInstanceId = Instance.InstanceId;
-            Job.IsRunning = false;
-
             Instance.TotalDetails++;
             Instance.LastOn = detail.Date;
             Instance.LastType = detail.Type;
             Instance.CompletedOn = detail.Date;
-
             Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
+
+            Job.LastInstanceStatus = detail.Type;
+            Job.LastInstanceStatusOn = detail.Date;
+            Job.LastInstanceId = Instance.InstanceId;
+            Job.IsRunning = false;
             Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
+            Job.HasException = Instance.HasException;
+            Job.HasError = Instance.HasError;
+            Job.HasWarning = Instance.HasWarning;
 
             return detail;
         }
@@ -294,19 +299,20 @@ namespace Toolshed.Jobs
             Job.LastInstanceId = Instance.InstanceId;
             Job.LastInstanceRunningTimeInSeconds = Instance.RunningTimeInSeconds;
 
-            if (!Job.HasException && Instance.HasException)
+            Job.HasException = Instance.HasException;
+            Job.HasError = Instance.HasError;
+            Job.HasWarning = Instance.HasWarning;
+
+            if (Instance.HasException)
             {
-                Job.HasException = Instance.HasException;
                 Job.TotalExceptions++;
             }
-            if (!Job.HasError && Instance.HasError)
+            if (Instance.HasError)
             {
-                Job.HasError = Instance.HasError;
                 Job.TotalErrors++;
             }
-            if (!Job.HasWarning && Instance.HasWarning)
+            if (Instance.HasWarning)
             {
-                Job.HasWarning = Instance.HasWarning;
                 Job.TotalWarnings++;
             }
 
