@@ -8,8 +8,9 @@ namespace Toolshed.Jobs
         private JobService Jobs { get; set; }
 
 
-        public Job Job { get; private set; }
-        public JobInstance Instance { get; private set; }
+        public Job? Job { get; private set; }
+
+        public JobInstance? Instance { get; private set; }
 
         /// <summary>
         /// If set to true, will abort a running instance and continue if the instance has been running longer than MinimumMinutesRunningForInstanceAbortion
@@ -20,7 +21,7 @@ namespace Toolshed.Jobs
         /// The default number of minutes that an instance must be running before it will be aborted IF IsRunningExceptionAborted is true.
         /// When setting IsRunningExceptionAborted to true, this property should be adjusted to reflect the number of minutes that is acceptable. The default is 240 minutes (4 hours)
         /// </summary>
-        public int MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
+        public double MinimumMinutesRunningForInstanceAbortion { get; set; } = 240;
 
         public JobManager()
         {
