@@ -42,7 +42,7 @@ namespace Toolshed.Jobs
         {
             await LoadJobAsync(jobId);
 
-            _ = await LoadInstanceAsync(instanceId);
+            await LoadInstanceAsync(instanceId);
             if (Instance is null)
             {
                 await StartJobAsync(message, instanceId);
@@ -76,7 +76,7 @@ namespace Toolshed.Jobs
                 }
             }
 
-            _ = FinalStart(message, instanceId);
+            await FinalStart(message, instanceId);
         }
 
 
@@ -94,10 +94,9 @@ namespace Toolshed.Jobs
 
 
 
-        public async Task<bool> LoadInstanceAsync(Guid instanceId)
+        public async Task LoadInstanceAsync(Guid instanceId)
         {
             Instance = await Jobs.GetJobInstanceAsync(Job.Id, instanceId);
-            return Instance != null;
         }
 
 
@@ -164,7 +163,7 @@ namespace Toolshed.Jobs
 
 
 
-        JobInstanceDetail FinalStart(string message, Guid? instanceId = null)
+        async Task FinalStart(string message, Guid? instanceId = null)
         {
             Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
 
@@ -191,7 +190,7 @@ namespace Toolshed.Jobs
             Job.HasError = Instance.HasError;
             Job.HasWarning = Instance.HasWarning;
 
-            return detail;
+            await SaveAsync(detail);
         }
         JobInstanceDetail Complete(string message)
         {
