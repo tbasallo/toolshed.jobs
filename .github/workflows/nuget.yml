@@ -24,5 +24,5 @@ jobs:
       run: dotnet pack Toolshed.Jobs\\Toolshed.Jobs.csproj -c Release
 
     - name: Publish to GitHub packages 
-      run: dotnet nuget push /home/runner/work/toolshed.jobs/toolshed.jobs/Toolshed.jobs/bin/Release/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push /home/runner/work/Toolshed.Jobs/Toolshed.Jobs/Toolshed.Jobs/bin/Release/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
      
