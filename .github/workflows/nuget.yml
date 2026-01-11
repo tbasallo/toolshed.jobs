@@ -1,4 +1,7 @@
-name: Publish ot Nuget
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Publish to Nuget
 
 on:
   push:
@@ -10,19 +13,36 @@ jobs:
   publish:
 
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Check out Repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup dotnet
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.x
 
-    - name: Pack
-      run: dotnet pack Toolshed.Azure\\Toolshed.jobs.csproj -c Release
+    - name: Calculate version
+      id: version
+      run: |
+        MAJOR=10
+        MINOR=0
+        PATCH=$(git rev-list --count HEAD)
+        VERSION="$MAJOR.$MINOR.$PATCH"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Calculated version: $VERSION"
 
-    - name: Publish to GitHub packages 
-      run: dotnet nuget push /home/runner/work/toolshed.jobs/toolshed.jobs/Toolshed.jobs/bin/Release/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-     
+    - name: Restore dependencies
+      run: dotnet restore Toolshed.Jobs/Toolshed.Jobs.csproj
+
+    - name: Build
+      run: dotnet build Toolshed.Jobs/Toolshed.Jobs.csproj -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+    - name: Pack
+      run: dotnet pack Toolshed.Jobs/Toolshed.Jobs.csproj -c Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }}
+
+    - name: Publish to NuGet
+      run: dotnet nuget push Toolshed.Jobs/bin/Release/*.nupkg --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
