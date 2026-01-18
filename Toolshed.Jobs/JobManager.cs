@@ -165,7 +165,9 @@ namespace Toolshed.Jobs
 
 
         async Task FinalStart(string message, Guid? instanceId = null)
-        {
+        {            
+            ArgumentNullException.ThrowIfNull(Job, "No job loaded to abort instance for");
+
             Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
 
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
@@ -195,6 +197,9 @@ namespace Toolshed.Jobs
         }
         JobInstanceDetail Complete(string message)
         {
+            ArgumentNullException.ThrowIfNull(Instance, "No instance to abort");
+            ArgumentNullException.ThrowIfNull(Job, "No job loaded to abort instance for");
+
             var detail = new JobInstanceDetail(Instance.JobId, Instance.InstanceId)
             {
                 Date = DateTime.UtcNow,
@@ -221,10 +226,8 @@ namespace Toolshed.Jobs
         }
         JobInstanceDetail Abort(string message)
         {
-            if (Instance == null)
-            {
-                throw new ArgumentNullException("No instance to abort");
-            }
+            ArgumentNullException.ThrowIfNull(Instance, "No instance to abort");
+            ArgumentNullException.ThrowIfNull(Job, "No job loaded to abort instance for");
 
             var now = DateTime.UtcNow;
             Instance.TotalDetails++;
@@ -242,15 +245,12 @@ namespace Toolshed.Jobs
             else
             {
                 Instance.CompletedOn = now;
-                Instance.HasError = true;
                 Instance.LastOn = now;
                 Instance.LastType = JobDetailType.Aborted;
                 Instance.RunningTimeInSeconds = Math.Round(Instance.CompletedOn.Value.Subtract(Instance.StartedOn).TotalSeconds, 2);
 
                 if (Job.LastInstanceId == Instance.InstanceId)
                 {
-                    Job.HasError = true;
-                    Job.TotalErrors++;
                     Job.IsRunning = false;
                     Job.LastInstanceStatusOn = now;
                     Job.LastInstanceStatus = JobDetailType.Aborted;
