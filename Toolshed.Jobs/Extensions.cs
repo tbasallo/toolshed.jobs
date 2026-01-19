@@ -12,7 +12,7 @@ public static class Extensions
     /// Add required services to dependency injection
     /// </summary>
     /// <param name="services"></param>
-    public static void AddToolshedAuditing(this IServiceCollection services, string azureStorageConnectionString)
+    public static void AddToolshedJobs(this IServiceCollection services, string azureStorageConnectionString)
     {
         ServiceManager.InitConnectionString(azureStorageConnectionString);
 
