@@ -56,24 +56,23 @@ namespace Toolshed.Jobs
         }
         public async Task StartJobAsync(string message = "Started", Guid? instanceId = null)
         {
-            if (!Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
+            if (Job!.LastInstanceStatusOn.HasValue && !Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
             {
-                if (IsRunningExceptionAborted && DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes >= MinimumMinutesRunningForInstanceAbortion)
+                var howLong = DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes;
+                if(howLong < MinimumMinutesRunningForInstanceAbortion)
+                {
+                    throw new JobCurrentlyRunningException(Job.LastInstanceId);
+                }
+                else
                 {
                     Instance = await Jobs.GetJobInstanceAsync(Job.Id, Job.LastInstanceId);
                     if (Instance != null)
                     {
-                        await AbortInstanceAsync("Aborted due to running longer than maximum run time");
+                        await AbortInstanceAsync($"Aborted due to running for {howLong} minutes, longer than maximum run time of {MinimumMinutesRunningForInstanceAbortion} minutes");
                     }
-                    else
-                    {
-                        Job.IsRunning = false;
-                        await Jobs.SaveAsync(Job);
-                    }
-                }
-                else
-                {
-                    throw new JobCurrentlyRunningException(Job.LastInstanceId);
+                    Job.IsRunning = false;
+                    await Jobs.SaveAsync(Job);
+
                 }
             }
 
@@ -165,7 +164,7 @@ namespace Toolshed.Jobs
 
 
         async Task FinalStart(string message, Guid? instanceId = null)
-        {            
+        {
             ArgumentNullException.ThrowIfNull(Job, "No job loaded to abort instance for");
 
             Instance = new JobInstance(Job.Id, instanceId.GetValueOrDefault(Guid.NewGuid()), Job.Version);
