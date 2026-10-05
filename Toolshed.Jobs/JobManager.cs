@@ -30,7 +30,7 @@ namespace Toolshed.Jobs
 
         public async Task LoadJobAsync(Guid jobId, string version = ServiceManager.DefaultVersionName)
         {
-            if(Job is null || Job.Id != jobId || Job.Version != version)
+            if (Job is null || Job.Id != jobId || Job.Version != version)
             {
                 Job = await Jobs.GetJobAsync(jobId, version);
                 if (Job == null)
@@ -59,9 +59,9 @@ namespace Toolshed.Jobs
             if (Job!.LastInstanceStatusOn.HasValue && !Job.IsMultipleRunningInstancesAllowed && Job.IsRunning)
             {
                 var howLong = DateTime.UtcNow.Subtract(Job.LastInstanceStatusOn.Value).TotalMinutes;
-                if(howLong < MinimumMinutesRunningForInstanceAbortion)
+                if (howLong < MinimumMinutesRunningForInstanceAbortion)
                 {
-                    throw new JobCurrentlyRunningException(Job.LastInstanceId);
+                    throw new JobCurrentlyRunningException(Job.LastInstanceId, howLong);
                 }
                 else
                 {
@@ -115,7 +115,7 @@ namespace Toolshed.Jobs
         {
             await AddAsync(JobLogLevel.Exception, exception.ToString());
 
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
             {
                 await AddAsync(JobLogLevel.Exception, $"{exception.Message}: {message}");
             }
